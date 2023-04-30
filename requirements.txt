@@ -1,0 +1,10 @@
+python-telegram-bot[webhooks]
+pydantic==1.10.7
+starlette
+nest_asyncio
+
+# db
+databases[postgresql]
+SQLAlchemy
+alembic==1.10.3
+psycopg2-binary
