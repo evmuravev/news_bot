@@ -21,7 +21,7 @@ async def set_author_step(
     await context.bot.send_message(
         chat_id=update.effective_user.id,
         text="""
-*\(4\/4\) Последний шаг\! Здесь вы можете указать свое авторство либо остаться анонимным\:*
+*Последний шаг\! Здесь вы можете указать свое авторство либо остаться анонимным\:*
 _\(100 симовлов \- ник в телеграмме\, ссылка на личный блог\, и пр\.\ Возможно\, лучших авторов будет ждать отдельная благодарность\!\)_
 \n_для возврата на предудущий шаг нажмите_    ↪/back
 \n_для пропуска шага нажмите_    ⏩/skip
@@ -73,5 +73,7 @@ async def author_skip(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def author_back(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    previous_step = get_previous_step(Steps.IMAGES)
+    news_repo: NewsRepository = get_repository(NewsRepository, context)
+    news = await news_repo.get_last_news_by_user_id(user_id=context._user_id)
+    previous_step = get_previous_step(Steps.AUTHOR, news=news)
     return await previous_step(update, context)

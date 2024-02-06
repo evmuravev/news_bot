@@ -83,11 +83,11 @@ def create_news_table() -> None:
         "news",
         sa.Column("id", sa.BigInteger, primary_key=True),
         sa.Column("text", sa.Text, nullable=True),
-        sa.Column("images", sa.ARRAY(sa.String)),
+        sa.Column("image", sa.Text, nullable=True),
         sa.Column("video", sa.Text, nullable=True),
         sa.Column("author", sa.Text, nullable=True),
         sa.Column("user_id", sa.BigInteger, sa.ForeignKey("users.id"), index=True, nullable=False),
-        sa.Column("message_id", sa.ARRAY(sa.String), index=True, nullable=True),
+        sa.Column("message_id", sa.Text, index=True, nullable=True),
         sa.Column("status", sa.Text, default='new', index=True),
         *timestamps(),
     )

@@ -6,8 +6,8 @@ from models.news_votes import NewsVotesCreate, NewsVotesInDB, NewsVotesUpdate
 
 
 CREATE_NEWS_VOTES = """
-    INSERT INTO news_votes (id, pros, cons)
-    VALUES (:id, :pros, :cons)
+    INSERT INTO news_votes (news_id, pros, cons)
+    VALUES (:news_id, :pros, :cons)
     RETURNING *;
 """
 

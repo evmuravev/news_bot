@@ -1,10 +1,8 @@
 import logging
+import random
 from dataclasses import dataclass
 from telegram import (
-    InputMediaPhoto,
-    InputMediaVideo,
     Update,
-    error
 )
 from telegram.ext import (
     ContextTypes,
@@ -20,14 +18,22 @@ from utils.utils import escape_markdownv2
 logger = logging.getLogger()
 
 
+SOUNDS = ['Чик-чирик!', 'Чив-чив!']
 DESCRIPTION = f"""
 {{text}}
 
 Автор: {{author}}
 \-\-\-\-\-\-\-
 ⚡️[Опубликовать свою новость](https://t.me/{TELEGRAM_CHANNEL_ID.replace('@','')}_bot)
-🐦‍⬛️ ||Чик\-чирик\!||
+🐦‍⬛️ ||{{sound}}||
 """
+
+
+@dataclass
+class News:
+    image: str
+    video: str
+    caption: str
 
 
 async def show_news(user: UserPublic, context: ContextTypes.DEFAULT_TYPE):
@@ -36,28 +42,35 @@ async def show_news(user: UserPublic, context: ContextTypes.DEFAULT_TYPE):
 
     caption = DESCRIPTION.format(
         text=escape_markdownv2(news.text),
-        author=escape_markdownv2(news.author)
+        author=escape_markdownv2(news.author),
+        sound=escape_markdownv2(random.choice(SOUNDS))
     )
-    media = [
-        *[InputMediaPhoto(image) for image in news.images],
-        *[InputMediaVideo(video) for video in [news.video] if news.video]
-    ]
-    return media, caption
+
+    return News(news.image, news.video, caption)
 
 
 async def show_news_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user: UserPublic = await get_user(update, context)
-    media, caption = await show_news(user, context)
-    if media:
-        await context.bot.send_media_group(
-                chat_id=user.id,
-                media=media,
-                caption=caption,
-                parse_mode="MarkdownV2",
-        )
-    else:
-        await context.bot.send_message(
-                chat_id=user.id,
-                text=caption,
-                parse_mode="MarkdownV2",
-        )
+    news: News = await show_news(user, context)
+    common_params = {
+        "chat_id": user.id,
+        "parse_mode": "MarkdownV2",
+    }
+    match news:
+        case News(image=None, video=None):
+            await context.bot.send_message(
+                    text=news.caption,
+                    **common_params
+            )
+        case News(video=None):
+            await context.bot.send_photo(
+                    photo=news.image,
+                    caption=news.caption,
+                    **common_params
+            )
+        case News(image=None):
+            await context.bot.send_video(
+                    video=news.video,
+                    caption=news.caption,
+                    **common_params
+            )

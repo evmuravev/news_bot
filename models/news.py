@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Optional
 from enum import Enum
 
 from models.core import DateTimeModelMixin, IDModelMixin, CoreModel
@@ -14,7 +14,7 @@ class NewsStatus(str, Enum):
 
 class NewsBase(CoreModel):
     text: Optional[str]
-    images: Optional[List[str]] = []
+    image: Optional[str]
     video: Optional[str]
     author: Optional[str]
     message_id: Optional[str]

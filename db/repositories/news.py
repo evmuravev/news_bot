@@ -24,20 +24,13 @@ GET_NEWS_BY_ID_QUERY = """
         AND (status != 'rejected' AND status != 'deleted');
 """
 
-ADD_IMAGES_QUERY = """
-    UPDATE news
-    SET images = array_append(images, :image)
-    WHERE id = :id
-    RETURNING array_length(images,1);
-"""
-
 
 UPDATE_NEWS_QUERY = '''
     UPDATE news
     SET
         id = :id,
         "text"      = :text,
-        images      = :images,
+        image      = :image,
         video       = :video,
         author      = :author,
         user_id     = :user_id,
@@ -100,16 +93,3 @@ class NewsRepository(BaseRepository):
         )
 
         return NewsInDB(**updated_profile)
-
-    async def add_images(
-        self, *,
-        user_id: int,
-        image: str,
-    ) -> int:
-        news = await self.get_last_news_by_user_id(user_id=user_id)
-        num_images = await self.db.fetch_one(
-            query=ADD_IMAGES_QUERY,
-            values={"id": news.id, "image": image},
-        )
-
-        return num_images['array_length']

@@ -7,6 +7,7 @@ from handlers.command_handlers import COMMAND_HANDLERS
 from handlers.conversation_handlers import CONVERSATION_HANDLERS
 from core.config import SECRET_TOKEN, WEBHOOK_URL
 
+
 async def start_bot(app: Application) -> None:
     setup_logger()
     await connect_to_db(app)

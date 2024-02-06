@@ -82,37 +82,58 @@ async def final_step(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     reply_markup = InlineKeyboardMarkup(
         [
-            InlineKeyboardButton("👍", callback_data=f'approve:{news.id}'),
-            InlineKeyboardButton("Рейтинг: 0"),
-            InlineKeyboardButton("👎", callback_data=f'decline:{news.id}'),
+            [InlineKeyboardButton("Рейтинг: 0", callback_data=f'rating')],
+            [
+                InlineKeyboardButton("👍", callback_data=f'approve:{news.id}'),
+                InlineKeyboardButton("👎", callback_data=f'decline:{news.id}'),
+            ]
         ]
     )
-    media, caption = await show_news(user, context)
-    messages: Tuple[Message] = await context.bot.send_media_group(
-            chat_id=TELEGRAM_CHANNEL_ID,
-            media=media,
-            caption=caption,
-            parse_mode="MarkdownV2",
-            reply_markup=reply_markup
-    )
+    news_post = await show_news(user, context)
+
+    common_params = {
+        "chat_id": TELEGRAM_CHANNEL_ID,
+        "parse_mode": "MarkdownV2",
+        "reply_markup": reply_markup,
+    }
+    match news_post:
+        case object(image=None, video=None):
+            message = await context.bot.send_message(
+                text=news_post.caption,
+                **common_params
+            )
+        case object(video=None):
+            message = await context.bot.send_photo(
+                photo=news_post.image,
+                caption=news_post.caption,
+                **common_params
+            )
+        case object(image=None):
+            message = await context.bot.send_video(
+                video=news_post.video,
+                caption=news_post.caption,
+                **common_params
+            )
 
     news_update = {
-        'messages_id': [message.id for message in messages],
+        'message_id': message.id,
         'status': NewsStatus.published
     }
 
     await news_repo.update_news(
-        profile_update=NewsUpdate(**news_update),
+        news_update=NewsUpdate(**news_update),
         user_id=user.id
     )
     news_votes_create = NewsVotesCreate(
         news_id=news.id
     )
-    await news_votes_repo.create_news_votes(news_votes_create)
+    await news_votes_repo.create_news_votes(
+        news_votes_create=news_votes_create
+    )
 
     await context.bot.send_message(
         chat_id=update.effective_user.id,
-        text='💪 Ваша новость опубликована! \nПомните, если рейтинг вашей новости станет ниже \-3 \- это будет считаться за предупреждение\!',
+        text='💪 Ваша новость опубликована! \nПомните, если рейтинг вашей новости станет ниже -3 - это будет считаться за предупреждение!',
     )
     await menu.menu(update, context)
 

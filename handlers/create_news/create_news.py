@@ -14,7 +14,7 @@ from db.repositories.news import NewsRepository
 from models.news import NewsBase, NewsCreate, NewsStatus
 from models.user import UserPublic
 from handlers.create_news.news_parts import (
-    author, images,  cancel, text, final_step, video
+    author, image, cancel, text, final_step, video
 )
 from handlers.create_news.common import Steps
 from handlers.common.users import get_user, register_new_user
@@ -55,7 +55,7 @@ async def create_news(update: Update, context: ContextTypes.DEFAULT_TYPE):
         chat_id=update.effective_user.id,
         text="""
 *Пройдите все шаги для опубликования новости*
-_\(добавление текста обязательно\, фото и видео \- опционально\)_
+_\(добавление текста обязательно\, фото или видео \- опционально\)_
 \n*Запрещены\:\n• спам, флуд и пр\.\n• бессмысленное содержание\n• любая реклама\n• незацензуренные мат\, обнаженка и сцены насилия\n• все\, что запрещено действующими законами РФ*
 \n*За одно нарушение \- предупреждение\, за повторное \- бан\!*
 """,
@@ -75,10 +75,10 @@ CREATE_NEWS_CONVERSATION = ConversationHandler(
         Steps.TEXT: [
             MessageHandler(filters.TEXT & ~filters.COMMAND, text.set_text),
         ],
-        Steps.IMAGES: [
-            MessageHandler(filters.PHOTO, images.set_images),
-            CommandHandler('skip', images.images_skip),
-            CommandHandler('back', images.images_back),
+        Steps.IMAGE: [
+            MessageHandler(filters.PHOTO, image.set_image),
+            CommandHandler('skip', image.image_skip),
+            CommandHandler('back', image.image_back),
         ],
         Steps.VIDEO: [
             MessageHandler(filters.VIDEO, video.set_video),

@@ -1,6 +1,3 @@
-from enum import Enum
-from typing import Optional
-
 from models.core import DateTimeModelMixin, CoreModel
 
 
