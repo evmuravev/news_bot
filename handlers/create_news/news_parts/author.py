@@ -37,13 +37,14 @@ async def set_author(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if len(author) <= 100:
         news_repo = get_repository(NewsRepository, context)
+        news = await news_repo.get_last_news_by_user_id(user_id=user.id)
         news_update = {
             'author': author,
             'status': NewsStatus.completed
         }
         await news_repo.update_news(
             news_update=NewsUpdate(**news_update),
-            user_id=user.id
+            news_id=news.id
         )
     else:
         await context.bot.send_message(
@@ -58,15 +59,15 @@ async def set_author(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def author_skip(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user = context._user_id
     news_repo = get_repository(NewsRepository, context)
+    news = await news_repo.get_last_news_by_user_id(user_id=context._user_id)
     news_update = {
         'author': 'anonymous',
         'status': NewsStatus.completed
     }
     await news_repo.update_news(
         news_update=NewsUpdate(**news_update),
-        user_id=user
+        news_id=news.id
     )
     next_step = get_next_step(Steps.AUTHOR)
     return await next_step(update, context)

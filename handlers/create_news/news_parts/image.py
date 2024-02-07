@@ -18,14 +18,15 @@ async def set_image_step(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
 ):
-    news_repo = get_repository(NewsRepository, context)
+    news_repo: NewsRepository = get_repository(NewsRepository, context)
+    news = await news_repo.get_last_news_by_user_id(user_id=context._user_id)
     news_update = {
         'image': None,
         'status': NewsStatus.partially_completed
     }
     await news_repo.update_news(
         news_update=NewsUpdate(**news_update),
-        user_id=context._user_id,
+        news_id=news.id,
     )
 
     await context.bot.send_message(
@@ -43,11 +44,12 @@ async def set_image_step(
 async def set_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
     image = update.message.photo[0].file_id
 
-    news_repo = get_repository(NewsRepository, context)
+    news_repo: NewsRepository = get_repository(NewsRepository, context)
+    news = await news_repo.get_last_news_by_user_id(user_id=context._user_id)
     news_update = {'image': image}
     await news_repo.update_news(
         news_update=NewsUpdate(**news_update),
-        user_id=context._user_id
+        news_id=news.id
     )
     await update.message.reply_text(
         "Изображение успешно загружено",

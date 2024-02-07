@@ -47,7 +47,7 @@ async def create_news(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await news_repo.update_news(
             news_update=NewsBase(),
-            user_id=user.id,
+            news_id=news.id,
             exclude_unset=False,
         )
 

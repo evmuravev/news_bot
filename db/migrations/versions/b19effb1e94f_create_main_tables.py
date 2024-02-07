@@ -58,8 +58,8 @@ def create_users_table() -> None:
         sa.Column("first_name", sa.Text, nullable=True),
         sa.Column("last_name", sa.Text, nullable=True),
         sa.Column("username", sa.Text, nullable=True),
-        sa.Column("language_code", sa.Text, nullable=False),
-        sa.Column("is_bot", sa.Boolean(), nullable=False),
+        sa.Column("language_code", sa.Text, nullable=True),
+        sa.Column("is_bot", sa.Boolean(), nullable=True),
         sa.Column("link", sa.Text, nullable=True),
         sa.Column("is_premium", sa.Boolean(), nullable=True),
         sa.Column("is_admin", sa.Boolean(), nullable=True),
@@ -106,6 +106,7 @@ def create_news_votes_table() -> None:
     op.create_table(
         "news_votes",
         sa.Column("news_id", sa.BigInteger, sa.ForeignKey("news.id", ondelete="CASCADE"), index=True,),
+        sa.Column("user_id", sa.BigInteger, index=True, nullable=False),
         sa.Column("pros", sa.BigInteger, nullable=True),
         sa.Column("cons", sa.BigInteger, nullable=True),
         *timestamps(indexed=True),

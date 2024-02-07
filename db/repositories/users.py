@@ -85,18 +85,18 @@ class UsersRepository(BaseRepository):
         )
         return UserInDB(**user)
 
-    async def update_is_banned(self, *, user: UserInDB) -> UserInDB:
+    async def update_is_banned(self, *, user_id: int) -> UserInDB:
         updated_user = await self.db.fetch_one(
             query=UPDATE_IS_BANNED_QUERY,
-            values={"user_id": user.id, "is_banned": True},
+            values={"user_id": user_id, "is_banned": True},
         )
 
         return UserInDB(**updated_user)
 
-    async def inc_num_of_complains(self, *, user: UserPublic) -> UserInDB:
+    async def inc_num_of_complains(self, *, user_id: int) -> UserInDB:
         updated_user = await self.db.fetch_one(
             query=UPDATE_NUM_OF_COMPLAINS_QUERY,
-            values={"user_id": user.id},
+            values={"user_id": user_id},
         )
 
         return UserInDB(**updated_user)

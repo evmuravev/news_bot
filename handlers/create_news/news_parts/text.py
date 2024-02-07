@@ -27,18 +27,18 @@ async def set_text_step(
 
 
 async def set_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user = update.message.from_user
     text = update.message.text
 
     if len(text) <= 1000:
-        news_repo = get_repository(NewsRepository, context)
+        news_repo: NewsRepository = get_repository(NewsRepository, context)
+        news = await news_repo.get_last_news_by_user_id(user_id=context._user_id)
         news_update = {
             'text': text,
             'status': NewsStatus.partially_completed
         }
         await news_repo.update_news(
             news_update=NewsUpdate(**news_update),
-            user_id=user.id
+            news_id=news.id
         )
     else:
         await context.bot.send_message(

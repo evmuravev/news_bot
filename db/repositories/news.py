@@ -21,16 +21,16 @@ GET_NEWS_BY_ID_QUERY = """
     SELECT *
     FROM news
     WHERE id = :id
-        AND (status != 'rejected' AND status != 'deleted');
+        AND status != 'deleted';
 """
 
 
 UPDATE_NEWS_QUERY = '''
     UPDATE news
     SET
-        id = :id,
+        id          = :id,
         "text"      = :text,
-        image      = :image,
+        image       = :image,
         video       = :video,
         author      = :author,
         user_id     = :user_id,
@@ -38,7 +38,7 @@ UPDATE_NEWS_QUERY = '''
         status      = :status
     WHERE
         id = :id
-        AND (status != 'published' AND status != 'deleted')
+        AND  status != 'deleted'
     RETURNING *;
 '''
 
@@ -77,19 +77,19 @@ class NewsRepository(BaseRepository):
     async def update_news(
         self, *,
         news_update: NewsUpdate,
-        user_id: int,
+        news_id: int,
         exclude_unset=True
     ) -> NewsInDB:
-        news = await self.get_last_news_by_user_id(user_id=user_id)
+        news = await self.get_news_by_id(id=news_id)
         update_params = news.copy(
             update=news_update.dict(exclude_unset=exclude_unset)
         )
 
-        updated_profile = await self.db.fetch_one(
+        updated_news = await self.db.fetch_one(
             query=UPDATE_NEWS_QUERY,
             values=update_params.dict(
                 exclude={"created_at", "updated_at"}
             ),
         )
 
-        return NewsInDB(**updated_profile)
+        return NewsInDB(**updated_news)

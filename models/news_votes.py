@@ -3,6 +3,7 @@ from models.core import DateTimeModelMixin, CoreModel
 
 class NewsVotesBase(CoreModel):
     news_id: int
+    user_id: int
     pros: int = 0
     cons: int = 0
 

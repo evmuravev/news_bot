@@ -18,14 +18,15 @@ async def set_video_step(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
 ):
-    news_repo = get_repository(NewsRepository, context)
+    news_repo: NewsRepository = get_repository(NewsRepository, context)
+    news = await news_repo.get_last_news_by_user_id(user_id=context._user_id)
     news_update = {
         'video': None,
         'status': NewsStatus.partially_completed
     }
     await news_repo.update_news(
         news_update=NewsUpdate(**news_update),
-        user_id=context._user_id
+        news_id=news.id
     )
     await context.bot.send_message(
         chat_id=update.effective_user.id,
@@ -41,16 +42,16 @@ async def set_video_step(
 
 
 async def set_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = context._user_id
     video = update.message.video.file_id
-    news_repo = get_repository(NewsRepository, context)
+    news_repo: NewsRepository = get_repository(NewsRepository, context)
+    news = await news_repo.get_last_news_by_user_id(user_id=context._user_id)
     news_update = {
         'video': video,
         'status': NewsStatus.partially_completed
     }
     await news_repo.update_news(
         news_update=NewsUpdate(**news_update),
-        user_id=user_id
+        news_id=news.id
     )
     next_step = get_next_step(Steps.VIDEO)
     return await next_step(update, context)

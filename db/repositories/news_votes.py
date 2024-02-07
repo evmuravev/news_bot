@@ -1,39 +1,42 @@
 from typing import List
 from databases import Database
+from databases.interfaces import Record
 from db.repositories.base import BaseRepository
 from db.repositories.news import NewsRepository
 from models.news_votes import NewsVotesCreate, NewsVotesInDB, NewsVotesUpdate
 
 
 CREATE_NEWS_VOTES = """
-    INSERT INTO news_votes (news_id, pros, cons)
-    VALUES (:news_id, :pros, :cons)
+    INSERT INTO news_votes (news_id, user_id, pros, cons)
+    VALUES (:news_id, :user_id, :pros, :cons)
     RETURNING *;
 """
 
-GET_NEW_COMPLAIN = """
+GET_NEWS_VOTES_BY_USER_ID = """
     SELECT *
-    FROM complains
-    WHERE complainant = :complainant
-        AND accused = :accused
-        AND status = 'new'
-    ;
+    FROM news_votes
+    WHERE news_id = :news_id
+        AND user_id = :user_id;
 """
 
-UPDATE_COMPLAIN_STATUS = """
-    UPDATE complains
-    SET status = :status
-    WHERE id = :id
+UPDATE_NEWS_VOTES = '''
+    UPDATE news_votes
+    SET
+        news_id  = :news_id,
+        user_id  = :user_id,
+        pros     = :pros,
+        cons     = :cons
+    WHERE
+        news_id = :news_id
+        AND user_id = :user_id
     RETURNING *;
-"""
+'''
 
-GET_ALL_COMPLAINS_QUERY = """
-    SELECT *
-    FROM complains
-    WHERE accused = :accused
-        AND status = 'new'
-    ;
-"""
+GET_RATING = '''
+    SELECT SUM(pros) - SUM(cons) as rating
+    FROM news_votes
+    WHERE news_id = :news_id
+'''
 
 
 class NewsVotesRepository(BaseRepository):
@@ -44,52 +47,74 @@ class NewsVotesRepository(BaseRepository):
     async def create_news_votes(
             self, *,
             news_votes_create: NewsVotesCreate
-    ) -> NewsVotesInDB:
+    ) -> Record:
 
         news_votes = await self.db.fetch_one(
             query=CREATE_NEWS_VOTES,
             values=news_votes_create.dict()
         )
 
-        return NewsVotesInDB(**news_votes)
+        return news_votes
 
-    async def get_complain(
+    async def get_news_votes(
             self, *,
-            complainant_id: int,
-            accused_id: int,
+            news_id: int,
+            user_id: int,
     ) -> NewsVotesInDB:
-        complain = await self.db.fetch_one(
-            query=GET_NEW_COMPLAIN,
+        news_votes_record = await self.db.fetch_one(
+            query=GET_NEWS_VOTES_BY_USER_ID,
             values={
-                "complainant": complainant_id,
-                "accused": accused_id
+                "news_id": news_id,
+                "user_id": user_id,
             }
         )
-        if complain:
-            return NewsVotesInDB(**complain)
+        if not news_votes_record:
+            news_votes_create = NewsVotesCreate(
+                news_id=news_id,
+                user_id=user_id,
+            )
+            news_votes_record = await self.create_news_votes(
+                news_votes_create=news_votes_create
+            )
 
-    async def update_status_complain(
-            self, *,
-            complain_update: NewsVotesUpdate,
-    ) -> NewsVotesInDB:
-        complain = await self.db.fetch_one(
-            query=UPDATE_COMPLAIN_STATUS,
-            values={
-                "id": complain_update.id,
-                "status": complain_update.status
-            }
-        )
-        return NewsVotesInDB(**complain)
+        return NewsVotesInDB(**news_votes_record)
 
-    async def get_all_complains(
-            self, *,
-            accused_id: int,
-    ) -> List[NewsVotesInDB]:
-        complains = await self.db.fetch_all(
-            query=GET_ALL_COMPLAINS_QUERY,
-            values={
-                "accused": accused_id,
-            }
+    async def news_upvote(self, *, news_id: int, user_id: int) -> int:
+        news_votes = await self.get_news_votes(
+            news_id=news_id,
+            user_id=user_id
         )
-        if complains:
-            return [NewsVotesInDB(**complain) for complain in complains]
+        update_params = news_votes.copy(
+            update={"pros": 1, "cons": 0}
+        )
+        await self.db.fetch_one(
+            query=UPDATE_NEWS_VOTES,
+            values=update_params.dict(
+                exclude={"created_at", "updated_at"}
+            ),
+        )
+        rating = await self.db.fetch_one(
+            query=GET_RATING,
+            values={"news_id": news_id}
+        )
+        return rating['rating']
+
+    async def news_downvote(self, *, news_id: int, user_id: int) -> int:
+        news_votes = await self.get_news_votes(
+            news_id=news_id,
+            user_id=user_id
+        )
+        update_params = news_votes.copy(
+            update={"pros": 0, "cons": 1}
+        )
+        await self.db.fetch_one(
+            query=UPDATE_NEWS_VOTES,
+            values=update_params.dict(
+                exclude={"created_at", "updated_at"}
+            ),
+        )
+        rating = await self.db.fetch_one(
+            query=GET_RATING,
+            values={"news_id": news_id}
+        )
+        return rating['rating']

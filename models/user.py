@@ -11,6 +11,7 @@ class UserBase(CoreModel):
     language_code: str
     is_bot: bool
     is_premium: Optional[bool]
+    is_admin: Optional[bool] = False
     is_banned: Optional[bool] = False
     num_of_complains: Optional[int] = 0
 

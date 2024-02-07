@@ -55,11 +55,11 @@ async def set_final_step(
 async def start_over(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     user = update.callback_query.from_user
-    news_repo = get_repository(NewsRepository, context)
-
+    news_repo: NewsRepository = get_repository(NewsRepository, context)
+    news = await news_repo.get_last_news_by_user_id(user_id=user.id)
     await news_repo.update_news(
         news_update=NewsBase(),
-        user_id=user.id,
+        news_id=news.id,
         exclude_unset=False
     )
     await context.bot.send_message(
@@ -77,7 +77,6 @@ async def final_back(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def final_step(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user: UserPublic = await get_user(update, context)
     news_repo: NewsRepository = get_repository(NewsRepository, context)
-    news_votes_repo: NewsVotesRepository = get_repository(NewsVotesRepository, context)
     news = await news_repo.get_last_news_by_user_id(user_id=user.id)
 
     reply_markup = InlineKeyboardMarkup(
@@ -122,18 +121,14 @@ async def final_step(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await news_repo.update_news(
         news_update=NewsUpdate(**news_update),
-        user_id=user.id
-    )
-    news_votes_create = NewsVotesCreate(
         news_id=news.id
-    )
-    await news_votes_repo.create_news_votes(
-        news_votes_create=news_votes_create
     )
 
     await context.bot.send_message(
         chat_id=update.effective_user.id,
-        text='💪 Ваша новость опубликована! \nПомните, если рейтинг вашей новости станет ниже -3 - это будет считаться за предупреждение!',
+        text=f'''💪 Ваша новость опубликована! \nПомните, если рейтинг вашей новости станет ниже -3 - это будет считаться за предупреждение!
+\n Перейти в канал: {TELEGRAM_CHANNEL_ID}
+''',
     )
     await menu.menu(update, context)
 
