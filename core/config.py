@@ -20,6 +20,7 @@ TELEGRAM_BOT_TOKEN = config("TELEGRAM_BOT_TOKEN", cast=str)
 TELEGRAM_CHANNEL_ID = config("TELEGRAM_CHANNEL_ID", cast=str)
 SECRET_TOKEN = config("SECRET_TOKEN", cast=str)
 WEBHOOK_URL = config("WEBHOOK_URL", cast=str)
+PORT = config("PORT", cast=int)
 
 DATABASE_URL = config(
   "DATABASE_URL",
