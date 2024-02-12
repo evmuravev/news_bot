@@ -77,11 +77,13 @@ CREATE_NEWS_CONVERSATION = ConversationHandler(
         ],
         Steps.IMAGE: [
             MessageHandler(filters.PHOTO, image.set_image),
+            MessageHandler(~filters.PHOTO & ~filters.COMMAND, image.not_image),
             CommandHandler('skip', image.image_skip),
             CommandHandler('back', image.image_back),
         ],
         Steps.VIDEO: [
             MessageHandler(filters.VIDEO, video.set_video),
+            MessageHandler(~filters.VIDEO & ~filters.COMMAND, video.not_video),
             CommandHandler('back', video.video_back),
             CommandHandler('skip', video.video_skip),
         ],

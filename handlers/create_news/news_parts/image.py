@@ -59,6 +59,19 @@ async def set_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return await next_step(update, context)
 
 
+async def not_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await context.bot.send_message(
+        chat_id=update.effective_user.id,
+        text="""
+🖼 *На этом шаге нужно приложить изображение\! Если его нет\, то перейдите к следующему шагу*
+\n_для возврата на предудущий шаг нажмите_    ↪/back
+\n_для пропуска шага нажмите_    ⏩/skip
+""",
+        parse_mode="MarkdownV2",
+    )
+    return Steps.IMAGE
+
+
 async def image_back(update: Update, context: ContextTypes.DEFAULT_TYPE):
     previous_step = get_previous_step(Steps.IMAGE)
     return await previous_step(update, context)
